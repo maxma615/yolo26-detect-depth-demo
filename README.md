@@ -1,5 +1,7 @@
 # YOLO26 Detect + Depth Dual-Model Realtime Demo (RDK S100P)
 
+**[English](README.md)** | **[中文文档](README_cn.md)**
+
 A realtime **dual-model** demo for the **D-Robotics RDK S100P** (Nash) edge board:
 **YOLO26 object detection** and **YOLO26 monocular depth estimation** run
 *concurrently* on the single-core **BPU**, fused into one composite view and
@@ -26,6 +28,17 @@ served over **HTTP/MJPEG** (browser) and/or **HDMI** (DRM/KMS direct-out).
   of one model overlaps the other's BPU execution.
 - **Display**: MJPEG + JSON stats over HTTP (`:8080`), and optional **HDMI**
   direct-out via DRM/KMS (`--hdmi`) with vsync page-flips.
+
+## Screenshots
+
+**Web dashboard** (browser, `:8080`) — metrics panel + live detect/depth + QR:
+
+![web dashboard](docs/images/web_dashboard.png)
+
+**Composite output** — top: camera + detections + person tracks; bottom: depth
+turbo + distance grid:
+
+![composite](docs/images/composite_detect_depth.jpg)
 
 ## Benchmarks (S100P, BPU @1.5GHz, 720p@30, steady-state)
 
@@ -170,4 +183,4 @@ the browser overlay (labels, colors, clamping, focus marker).
 
 ## License
 
-Apache-2.0 — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).

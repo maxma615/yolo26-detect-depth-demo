@@ -1,5 +1,7 @@
 # YOLO26 检测 + 深度 双模型实时演示（RDK S100P）
 
+**[English](README.md)** | **[中文文档](README_cn.md)**
+
 在 **D-Robotics RDK S100P**（Nash）上，**YOLO26 目标检测** 与 **YOLO26 单目深度估计**
 在单核 **BPU** 上**并发**推理，融合为一路合成画面，通过 **HTTP/MJPEG**（浏览器）与
 **HDMI**（DRM/KMS 直出）输出。
@@ -10,6 +12,16 @@
 - **推理**：`hobot_dnn` C API（`hbDNN`/`hbUCP`），双 worker 线程提交异步 UCP 任务，
   两模型同时驻留 BPU 调度器；一模型的 CPU 前/后处理与另一模型的 BPU 执行重叠。
 - **显示**：HTTP `:8080`（MJPEG + JSON 面板）；`--hdmi` 走 DRM/KMS 直出（vsync 翻页）。
+
+## 效果截图
+
+**Web 面板**（浏览器 `:8080`）—— 指标面板 + 实时检测/深度 + 二维码：
+
+![web 面板](docs/images/web_dashboard.png)
+
+**合成输出** —— 上：相机 + 检测框 + person 跟踪；下：深度伪彩 + 距离网格：
+
+![合成输出](docs/images/composite_detect_depth.jpg)
 
 ## 性能（S100P，BPU@1.5GHz，720p@30 稳态）
 
@@ -78,4 +90,4 @@ cd cpp/build && ctest --output-on-failure
 
 ## 许可证
 
-Apache-2.0，见 [LICENSE](LICENSE)。
+MIT，见 [LICENSE](LICENSE)。
