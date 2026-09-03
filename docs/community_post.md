@@ -12,11 +12,11 @@
 
 **Web 面板**（浏览器打开 `:8080`，左侧指标 / 中间实时双画面 / 右侧二维码）：
 
-![web 面板](images/web_dashboard.png)
+![web 面板](https://raw.githubusercontent.com/maxma615/yolo26-detect-depth-demo/main/docs/images/web_dashboard.png)
 
 **合成输出**：上 = 相机 + 检测框 + person 跟踪（ByteTrack），下 = 深度伪彩 + 距离网格：
 
-![合成输出](images/composite_detect_depth.jpg)
+![合成输出](https://raw.githubusercontent.com/maxma615/yolo26-detect-depth-demo/main/docs/images/composite_detect_depth.jpg)
 
 ## 它做了什么
 
