@@ -1,0 +1,40 @@
+# Build
+build/
+cpp/build/
+*.o
+*.obj
+*.a
+*.so
+*.deb
+*.rpm
+*.tar.gz
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+Testing/
+
+# Models (download separately, see scripts/download_models.sh)
+models/*.hbm
+models/*.bin
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local worktrees / staging (never commit)
+.codex-stage-*/
+.worktrees/
+.workbuddy/
+
+# Output artifacts
+output/*.mp4
+output/*.jpg
+web/qr*.png

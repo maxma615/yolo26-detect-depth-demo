@@ -1,0 +1,21 @@
+[Unit]
+Description=YOLO26 Detect + Depth dual-model HDMI demo (RDK S100P)
+# Started from multi-user.target; gdm3 must be disabled (install_boot.sh
+# does that) so this service owns the DRM master / HDMI output.
+After=multi-user.target
+Conflicts=gdm3.service
+Conflicts=getty@tty2.service
+
+[Service]
+Type=simple
+WorkingDirectory=/userdata/yolo26_dual_demo
+ExecStart=/userdata/yolo26_dual_demo/cpp/build/yolo26_dual --hdmi --grid-cols 6 --grid-rows 4
+Restart=always
+RestartSec=3
+KillMode=control-group
+TimeoutStopSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

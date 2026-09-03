@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>YOLO26 Detect · Track · Depth | RDK S100P</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand:#ff3c00;
+      --brand-2:#ff5500;
+      --brand-3:#ff7300;
+      --brand-4:#ff8c00;
+      --brand-5:#ff9d00;
+      --brand-6:#ffae00;
+      --page:#f6f6f4;
+      --card:#fff;
+      --text:#171717;
+      --muted:#6e6e73;
+      --line:#e1e1dd;
+      --track:#ecece8;
+      --radius:clamp(12px,.85vw,16px);
+      --gap:clamp(10px,.85vw,16px);
+      --qr-size:clamp(96px,9vw,150px);
+      --font-body:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;
+      --font-display:Space Grotesk,Inter,ui-sans-serif,sans-serif;
+      --font-mono:JetBrains Mono,ui-monospace,SFMono-Regular,Consolas,monospace;
+      font-family:var(--font-body);
+    }
+
+    * { box-sizing:border-box; }
+    html,body { width:100%;height:100%;overflow:hidden; }
+    body { margin:0;color:var(--text);background:var(--page); }
+
+    .dashboard {
+      width:100vw;
+      height:100vh;
+      padding:var(--gap);
+      display:grid;
+      grid-template-columns:minmax(280px,20fr) minmax(480px,52fr) minmax(210px,14fr);
+      gap:var(--gap);
+      background:var(--page);
+    }
+
+    .performance,.inference,.community { min-width:0;min-height:0; }
+    .performance {
+      display:grid;
+      grid-template-rows:auto minmax(98px,.75fr) minmax(164px,1.2fr) minmax(74px,.55fr) minmax(94px,.68fr) auto;
+      gap:clamp(8px,.65vw,12px);
+      overflow:hidden;
+    }
+    .inference { display:grid;grid-template-rows:minmax(0,1fr);height:100%; }
+    .community { display:grid;grid-template-rows:auto minmax(0,1fr);gap:var(--gap);overflow:hidden; }
+
+    .statusHeader,.stageHeader,.brandHeader {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      min-width:0;
+    }
+    .eyebrow,.cardLabel,.metricLabel,.modelMeta,.deviceMeta,.resourceLinks {
+      color:var(--muted);
+      font-size:clamp(12px,0.95vw,16px);
+      font-weight:750;
+      letter-spacing:.11em;
+      text-transform:uppercase;
+    }
+    h1,h2 { margin:2px 0 0;letter-spacing:-.045em;line-height:1.04;font-family:var(--font-display); }
+    h1 { font-size:clamp(26px,2.1vw,36px); }
+    .stageHeader h2 { font-size:clamp(18px,1.55vw,28px); }
+    .status {
+      flex:0 0 auto;
+      padding:6px 9px;
+      border-radius:99px;
+      color:var(--brand);
+      background:#fff0e9;
+      font-size:clamp(12px,.95vw,15px);
+      font-weight:850;
+      letter-spacing:.09em;
+    }
+    .status.offline { color:#777;background:#eeeeeb; }
+    .card {
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:0 4px 14px rgba(23,23,23,.045);
+    }
+
+    .latencyPanel { display:grid;grid-template-rows:auto minmax(0,1fr);padding:clamp(11px,.9vw,16px);overflow:hidden; }
+    .latencyGrid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:clamp(9px,.8vw,15px); }
+    .latencyMetric { min-width:0;padding-top:clamp(8px,.7vw,12px); }
+    .latencyMetric + .latencyMetric { border-left:1px solid var(--line);padding-left:clamp(9px,.8vw,15px); }
+    .latencyMetric strong {
+      display:block;
+      margin-top:4px;
+      color:var(--brand);
+      font-family:var(--font-mono);
+      font-size:clamp(42px,3.8vw,64px);
+      font-weight:780;
+      line-height:1;
+      letter-spacing:-.055em;
+      font-variant-numeric:tabular-nums;
+    }
+    .latencyMetric small { color:var(--muted);font-size:clamp(12px,.95vw,15px);font-weight:750;letter-spacing:.08em; }
+
+    .resourcePanel { display:grid;align-content:space-between;gap:clamp(10px,1.1vh,16px);padding:clamp(12px,1vw,18px);overflow:hidden; }
+    .resourceRow { display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px 12px; }
+    .resourceRow strong { font-family:var(--font-mono);font-size:clamp(19px,1.5vw,26px);font-variant-numeric:tabular-nums; }
+    .resourceBar {
+      grid-column:1 / -1;
+      height:clamp(12px,.95vw,17px);
+      overflow:hidden;
+      border-radius:999px;
+      background:var(--track);
+      box-shadow:inset 0 0 0 1px rgba(0,0,0,.025);
+    }
+    .resourceFill { width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--brand),var(--brand-5));transition:width .35s ease; }
+    .resourceRow[data-resource="cpu"] .resourceFill { background:linear-gradient(90deg,var(--brand-2),var(--brand-4)); }
+    .resourceRow[data-resource="memory"] .resourceFill { background:linear-gradient(90deg,var(--brand-3),var(--brand-6)); }
+
+    .opsGrid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(8px,.65vw,11px); }
+    .opsMetric { display:grid;grid-template-rows:auto auto;align-items:start;gap:6px;padding:clamp(10px,.8vw,14px);min-width:0; }
+    .opsMetric .metricLabel,.opsMetric small { display:block; }
+    .opsMetric strong { color:var(--brand);font-family:var(--font-mono);font-size:clamp(30px,2.6vw,48px);line-height:1;font-variant-numeric:tabular-nums; }
+    .opsMetric small { color:var(--muted);font-size:clamp(10px,.68vw,12px);font-weight:750;letter-spacing:.08em; }
+
+    .trackingCard { padding:clamp(11px,.9vw,16px);overflow:hidden; }
+    .trackingCard dl { display:grid;grid-template-columns:1.1fr 1fr 1fr 1.4fr;gap:5px;margin:clamp(9px,.8vw,14px) 0 0; }
+    .trackingCard dl div { min-width:0; }
+    dt { color:var(--muted);font-size:clamp(12px,0.95vw,15px); }
+    dd { margin:2px 0 0;color:var(--brand);font-family:var(--font-mono);font-size:clamp(22px,1.9vw,32px);font-weight:780;line-height:1;letter-spacing:-.045em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .modelMeta { display:flex;align-items:center;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 3px; }
+
+    .stageHeader { display:none; }
+    #runtime { color:var(--muted);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:clamp(12px,.95vw,16px);white-space:nowrap; }
+    .streamShell { min-height:0;position:relative;overflow:hidden;border:1px solid var(--line);border-radius:var(--radius);background:var(--page);box-shadow:0 10px 28px rgba(0,0,0,.05);height:100%; }
+    #stream { position:absolute;inset:0;width:100%;height:100%;object-fit:cover; }
+    #stream.stream-error { visibility:hidden; }
+    .streamState { position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:9px 12px;border-radius:10px;color:var(--brand-5);background:rgba(17,17,17,.82);backdrop-filter:blur(6px);font-size:clamp(10px,.8vw,13px);font-weight:850;letter-spacing:.12em; }
+
+    .brandHeader { padding:2px 0;justify-content:center;display:flex; }
+    .brandMark { display:grid;place-items:center;flex:0 0 auto;width:clamp(34px,2.7vw,46px);aspect-ratio:1;color:#fff;background:var(--brand);border-radius:11px;font-size:clamp(17px,1.45vw,24px);font-weight:850; }
+    .brandHeader h2 { font-size:clamp(17px,1.45vw,24px); }
+    .brandLogo { width:auto;max-width:100%;max-height:44px;object-fit:contain;display:block;margin:0 auto; }
+    .brandHeader small { color:var(--muted);font-size:clamp(12px,.95vw,15px); }
+    .qrStack { display:grid;grid-template-rows:repeat(3,minmax(0,1fr));gap:var(--gap);min-height:0; }
+    .qrCard {
+      display:grid;
+      grid-template-rows:minmax(0,1fr) auto;
+      justify-items:center;
+      align-items:center;
+      gap:clamp(5px,.5vw,9px);
+      padding:clamp(7px,.65vw,12px);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:var(--card);
+      box-shadow:0 4px 14px rgba(23,23,23,.035);
+      overflow:hidden;
+    }
+    .qrCard img,.qrMissing { width:clamp(112px,9vw,190px);width:var(--qr-size);max-width:100%;max-height:100%;aspect-ratio:1;border:1px solid var(--line);border-radius:10px;background:#fafaf8;object-fit:contain; }
+    .qrMissing { display:grid;place-items:center;padding:8px;color:var(--muted);font-size:clamp(12px,.95vw,15px);font-weight:750;line-height:1.25;text-align:center; }
+    .qrCopy { text-align:center;min-width:0; }
+    .qrCard strong,.qrCard small { display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .qrCard strong { font-size:clamp(13px,1vw,17px); }
+    .qrCard small { margin-top:2px;color:var(--muted);font-size:clamp(11px,.85vw,14px); }
+    .deviceMeta { min-height:32px;padding:9px 0 0;border-top:1px solid var(--line);overflow:hidden;white-space:nowrap;text-overflow:ellipsis; }
+    .resourceLinks { display:flex;gap:15px; }
+    .resourceLinks a { color:var(--text);text-decoration:none;border-bottom:1px solid var(--brand);letter-spacing:.05em; }
+    .resourceLinks a:hover { color:var(--brand); }
+
+    @media (max-width:1450px) {
+      :root { --qr-size:clamp(108px,10vw,142px); }
+      .dashboard { grid-template-columns:minmax(270px,22fr) minmax(360px,44fr) minmax(200px,16fr); }
+      .performance { grid-template-rows:auto minmax(90px,.72fr) minmax(146px,1.14fr) minmax(68px,.5fr) minmax(84px,.62fr) auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="dashboard">
+    <aside class="performance" data-region="performance">
+      <header class="statusHeader">
+        <div><span class="eyebrow">RDK S100P</span><h1>Performance</h1></div>
+        <span class="status" id="onlineState">LIVE</span>
+      </header>
+
+      <section class="card latencyPanel">
+        <span class="cardLabel">HBM INFERENCE LATENCY</span>
+        <div class="latencyGrid">
+          <div class="latencyMetric"><span class="metricLabel">DETECT HBM</span><strong id="detectHbmMs">—</strong><small>MS</small></div>
+          <div class="latencyMetric"><span class="metricLabel">DEPTH HBM</span><strong id="depthHbmMs">—</strong><small>MS</small></div>
+        </div>
+      </section>
+
+      <section class="card resourcePanel">
+        <span class="cardLabel">SYSTEM UTILIZATION</span>
+        <div class="resourceRow" data-resource="bpu"><span class="metricLabel">BPU</span><strong id="bpuUsage">—</strong><div class="resourceBar" role="progressbar" aria-label="BPU utilization" aria-valuemin="0" aria-valuemax="100"><div class="resourceFill" id="bpuBar"></div></div></div>
+        <div class="resourceRow" data-resource="cpu"><span class="metricLabel">CPU</span><strong id="cpuUsage">—</strong><div class="resourceBar" role="progressbar" aria-label="CPU utilization" aria-valuemin="0" aria-valuemax="100"><div class="resourceFill" id="cpuBar"></div></div></div>
+        <div class="resourceRow" data-resource="memory"><span class="metricLabel">MEMORY</span><strong id="memoryUsage">—</strong><div class="resourceBar" role="progressbar" aria-label="Memory utilization" aria-valuemin="0" aria-valuemax="100"><div class="resourceFill" id="memoryBar"></div></div></div>
+      </section>
+
+      <section class="opsGrid">
+        <article class="card opsMetric"><div><span class="metricLabel">DISPLAY</span><small>FPS</small></div><strong id="displayFps">—</strong></article>
+        <article class="card opsMetric"><div><span class="metricLabel">PERSON</span><small>ACTIVE</small></div><strong id="activeTracks">—</strong></article>
+      </section>
+
+      <section class="card trackingCard">
+        <span class="cardLabel">BYTETRACK · PERSON</span>
+        <dl>
+          <div><dt>Active</dt><dd id="trackActive">—</dd></div>
+          <div><dt>Total</dt><dd id="trackTotal">—</dd></div>
+          <div><dt>Lost</dt><dd id="trackLost">—</dd></div>
+          <div><dt>Latency</dt><dd id="trackMs">—</dd></div>
+        </dl>
+      </section>
+
+      <section class="modelMeta" id="modelMeta"></section>
+    </aside>
+
+    <section class="inference" data-region="inference">
+      <header class="stageHeader">
+        <div><span class="eyebrow">YOLO26 DUAL PIPELINE</span><h2>Detect · Track · Depth</h2></div>
+        <span id="runtime">—</span>
+      </header>
+      <div class="streamShell">
+        <img id="stream" src="/stream" alt="YOLO26 Detect, Track and Depth stream">
+        <div class="streamState" id="streamState" hidden>RECONNECTING</div>
+      </div>
+    </section>
+
+    <aside class="community" data-region="community">
+      <header class="brandHeader"><img class="brandLogo" src="/qr/brand.png" alt="RDK S100P"></header>
+      <section class="qrStack">
+        <article class="qrCard" data-qr-card><img src="/qr/qr1.png" alt="微信交流群"><div class="qrCopy"><strong>微信交流群</strong><small>开发交流</small></div></article>
+        <article class="qrCard" data-qr-card><img src="/qr/qr2.png" alt="社区论坛"><div class="qrCopy"><strong>社区论坛</strong><small>提问与分享</small></div></article>
+        <article class="qrCard" data-qr-card><img src="/qr/qr3.png" alt="微信公众号"><div class="qrCopy"><strong>微信公众号</strong><small>资讯与教程</small></div></article>
+      </section>
+    </aside>
+  </main>
+
+  <script>
+    const byId = id => document.getElementById(id);
+    const number = value => Number.isFinite(Number(value)) ? Number(value) : null;
+    const format = (value, digits = 1) => {
+      const numeric = number(value);
+      return numeric === null ? '—' : numeric.toFixed(digits);
+    };
+    const formatMs = value => {
+      const numeric = number(value);
+      return numeric === null ? '—' : `${numeric.toFixed(1)} ms`;
+    };
+
+    let consecutiveFailures = 0;
+    let streamRetryTimer;
+
+    function setOnline(online) {
+      const state = byId('onlineState');
+      state.textContent = online ? 'LIVE' : 'OFFLINE';
+      state.classList.toggle('offline', !online);
+    }
+
+    function setUtilization(name, value) {
+      const numeric = number(value);
+      const percent = numeric === null ? null : Math.max(0, Math.min(100, numeric));
+      byId(`${name}Usage`).textContent = percent === null ? '—' : `${percent.toFixed(1)}%`;
+      byId(`${name}Bar`).style.width = percent === null ? '0%' : `${percent}%`;
+      const track = byId(`${name}Bar`).parentElement;
+      if (percent === null) track.removeAttribute('aria-valuenow');
+      else track.setAttribute('aria-valuenow', percent.toFixed(1));
+    }
+
+    function renderStats(stats) {
+      const detect = stats.detect || {};
+      const depth = stats.depth || {};
+      const tracking = stats.tracking || {};
+      const system = stats.system || {};
+      const bpu = stats.bpu || {};
+      const cpu = stats.cpu || {};
+      const memory = stats.memory || {};
+      const detectHbm = detect.bpu_ms && detect.bpu_ms.avg;
+      const depthHbm = depth.bpu_ms && depth.bpu_ms.avg;
+
+      byId('detectHbmMs').textContent = format(detectHbm);
+      byId('depthHbmMs').textContent = format(depthHbm);
+      byId('displayFps').textContent = format(stats.display_fps);
+      byId('activeTracks').textContent = format(tracking.active, 0);
+      byId('trackActive').textContent = format(tracking.active, 0);
+      byId('trackTotal').textContent = format(tracking.total, 0);
+      byId('trackLost').textContent = format(tracking.lost, 0);
+      byId('trackMs').textContent = formatMs(tracking.ms);
+      byId('runtime').textContent = number(stats.uptime_s) === null ? '—' : `${Math.floor(stats.uptime_s)} s`;
+      byId('modelMeta').textContent = [system.soc, system.dnn].filter(Boolean).join(' · ');
+
+      setUtilization('bpu', bpu.util_pct);
+      setUtilization('cpu', cpu.util_pct ?? system.cpu_pct);
+      setUtilization('memory', memory.util_pct ?? system.memory_pct);
+    }
+
+    async function pollStats() {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 1200);
+      try {
+        const response = await fetch('/stats.json', { cache:'no-store', signal:controller.signal });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        renderStats(await response.json());
+        consecutiveFailures = 0;
+        setOnline(true);
+      } catch (error) {
+        consecutiveFailures += 1;
+        if (consecutiveFailures >= 3) setOnline(false);
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    const stream = byId('stream');
+    const streamState = byId('streamState');
+    stream.addEventListener('error', () => {
+      stream.classList.add('stream-error');
+      streamState.hidden = false;
+      clearTimeout(streamRetryTimer);
+      streamRetryTimer = setTimeout(() => { stream.src = `/stream?retry=${Date.now()}`; }, 1000);
+    });
+    stream.addEventListener('load', () => {
+      clearTimeout(streamRetryTimer);
+      stream.classList.remove('stream-error');
+      streamState.hidden = true;
+    });
+
+    document.querySelectorAll('.qrCard img').forEach(image => {
+      image.addEventListener('error', () => {
+        const missing = document.createElement('div');
+        missing.className = 'qrMissing';
+        missing.textContent = image.alt;
+        image.replaceWith(missing);
+      }, { once:true });
+    });
+
+    pollStats();
+    setInterval(pollStats, 600);
+  </script>
+</body>
+</html>
