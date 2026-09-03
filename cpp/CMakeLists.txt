@@ -47,6 +47,18 @@ target_link_libraries(test_browser_overlay PRIVATE browser_overlay)
 add_test(NAME browser_overlay COMMAND test_browser_overlay)
 
 # ----------------------------------------------------------------------------
+# System metrics (CPU / memory from /proc, BPU from sysfs)
+# ----------------------------------------------------------------------------
+add_library(system_metrics STATIC src/system_metrics.cpp)
+target_include_directories(system_metrics PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(system_metrics PUBLIC pthread)
+
+add_executable(test_system_metrics tests/test_system_metrics.cpp)
+target_link_libraries(test_system_metrics PRIVATE system_metrics)
+add_test(NAME system_metrics COMMAND test_system_metrics)
+
+# ----------------------------------------------------------------------------
 # Main demo binary
 # ----------------------------------------------------------------------------
 add_executable(yolo26_dual src/main.cpp)
@@ -60,7 +72,7 @@ target_link_libraries(yolo26_dual
   ${HOBOT_LIB}/libdnn.so
   ${HOBOT_LIB}/libhbucp.so
   drm)
-target_link_libraries(yolo26_dual byte_tracker browser_overlay)
+target_link_libraries(yolo26_dual byte_tracker browser_overlay system_metrics)
 # Keep the Horizon runtime libs resolvable at runtime.
 set_target_properties(yolo26_dual PROPERTIES
   BUILD_RPATH "${HOBOT_LIB}"
