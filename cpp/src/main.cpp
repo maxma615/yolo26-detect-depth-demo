@@ -1480,7 +1480,7 @@ struct Args {
   bool no_grid = false;
   double depth_meters = 0;  // 0 = raw normalized; >0 = meters calibration
   std::string source = "0";
-  int cam_w = 1280, cam_h = 720, cam_fps = 30;
+  int cam_w = 1920, cam_h = 1080, cam_fps = 30;   // 1080p@30 default (PIXY-capable)
   int port = 8080;
   float score = 0.25f, nms = 0.45f;
   float track_thresh = 0.30f;

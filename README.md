@@ -40,7 +40,7 @@ turbo + distance grid:
 
 ![composite](docs/images/composite_detect_depth.jpg)
 
-## Benchmarks (S100P, BPU @1.5GHz, 720p@30, steady-state)
+## Benchmarks (S100P, BPU @1.5GHz, 1080p@30, steady-state)
 
 | Metric | Value |
 |---|---|
@@ -123,7 +123,7 @@ Open `http://<board-ip>:8080/` in a browser.
 | Flag | Default | Meaning |
 |---|---|---|
 | `--source` | `0` | V4L2 camera index (or image/video path) |
-| `--cam-w/--cam-h` | `1280/720` | capture resolution |
+| `--cam-w/--cam-h` | `1920/1080` | capture resolution |
 | `--cam-fps` | `30` | capture frame rate (PIXY supports 60) |
 | `--port` | `8080` | HTTP port |
 | `--hdmi` | off | enable HDMI/DRM direct-out |

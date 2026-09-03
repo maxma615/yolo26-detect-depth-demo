@@ -23,7 +23,7 @@
 
 ![合成输出](docs/images/composite_detect_depth.jpg)
 
-## 性能（S100P，BPU@1.5GHz，720p@30 稳态）
+## 性能（S100P，BPU@1.5GHz，1080p@30 稳态）
 
 | 指标 | 数值 |
 |---|---|

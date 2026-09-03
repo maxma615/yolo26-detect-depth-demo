@@ -2,7 +2,7 @@
 
 > 在 RDK S100P 上让 **YOLO26 目标检测** 和 **YOLO26 单目深度估计** 两个模型**同时**跑在单核 BPU 上，
 > 一路合成画面同时输出到**浏览器（MJPEG）**和 **HDMI（DRM/KMS 直出）**，
-> 720p@30 零丢帧、BPU 占用 ~65%。代码已开源，欢迎拍砖 / 复用。
+> 1080p@30 零丢帧、BPU 占用 ~65%。代码已开源，欢迎拍砖 / 复用。
 
 **项目地址**：https://github.com/maxma615/yolo26-detect-depth-demo （MIT）
 
@@ -29,7 +29,7 @@
 - **EMEET PIXY 支持**：任意 `--source` 自动走 V4L2；PIXY 可开**固件级 AI 人形跟踪**（HID，比软件 PID 稳）。
 - **真实 BPU 占用**：直接读 `/sys/devices/system/bpu/ratio` 硬件计数，不是估算。
 
-## 实测数据（S100P，BPU@1.5GHz，720p@30 稳态）
+## 实测数据（S100P，BPU@1.5GHz，1080p@30 稳态）
 
 | 指标 | 数值 |
 |---|---|
