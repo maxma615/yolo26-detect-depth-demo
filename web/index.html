@@ -4,176 +4,145 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>YOLO26 Detect · Track · Depth | RDK S100P</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://db.onlinewebfonts.com/c/8cb707a9b8a73f8a7403336b861c3074?family=BubbledotICG-FinePos" rel="stylesheet">
   <style>
     :root {
-      --brand:#ff3c00;
-      --brand-2:#ff5500;
-      --brand-3:#ff7300;
-      --brand-4:#ff8c00;
-      --brand-5:#ff9d00;
-      --brand-6:#ffae00;
-      --page:#f6f6f4;
-      --card:#fff;
-      --text:#171717;
-      --muted:#6e6e73;
-      --line:#e1e1dd;
-      --track:#ecece8;
-      --radius:clamp(12px,.85vw,16px);
-      --gap:clamp(10px,.85vw,16px);
-      --qr-size:clamp(96px,9vw,150px);
-      --font-body:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;
-      --font-display:Space Grotesk,Inter,ui-sans-serif,sans-serif;
-      --font-mono:JetBrains Mono,ui-monospace,SFMono-Regular,Consolas,monospace;
-      font-family:var(--font-body);
+      --brand:#ff3c00;--ink:#22262b;--muted:#4c5662;--line:rgba(95,110,125,.18);
+      --paper:rgba(255,255,255,.78);--font-sans:"Inter","Segoe UI",system-ui,sans-serif;
+      --font-display:"BubbledotICG-FinePos","Bahnschrift",monospace;
+      --font-data:"Consolas","SFMono-Regular",monospace;
+      font-family:var(--font-sans);color:var(--ink);background:#edf0f3;
+      -webkit-font-smoothing:antialiased;
     }
-
     * { box-sizing:border-box; }
-    html,body { width:100%;height:100%;overflow:hidden; }
-    body { margin:0;color:var(--text);background:var(--page); }
-
-    .dashboard {
-      width:100vw;
-      height:100vh;
-      padding:var(--gap);
-      display:grid;
-      grid-template-columns:minmax(280px,20fr) minmax(480px,52fr) minmax(210px,14fr);
-      gap:var(--gap);
-      background:var(--page);
-    }
-
+    html,body { margin:0;width:100%;height:100%; }
+    body { overflow:hidden;background:radial-gradient(ellipse at 50% -30%,#ffffff80 15%,transparent 65%),linear-gradient(135deg,#dde2e7,#e9edf1 48%,#d7dfe6); }
+    body::before { content:"";position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(#667a8f14 .65px,transparent .65px);background-size:8px 8px;mask-image:linear-gradient(90deg,#000,transparent 25%,transparent 75%,#000); }
+    .dashboard { position:relative;height:100vh;height:100dvh;max-width:1800px;margin:auto;padding:22px 26px;display:grid;gap:24px;grid-template-columns:minmax(280px,340px) minmax(0,calc((100dvh - 112px)*.884)) minmax(200px,260px);justify-content:center; }
     .performance,.inference,.community { min-width:0;min-height:0; }
-    .performance {
-      display:grid;
-      grid-template-rows:auto minmax(98px,.75fr) minmax(164px,1.2fr) minmax(74px,.55fr) minmax(94px,.68fr) auto;
-      gap:clamp(8px,.65vw,12px);
-      overflow:hidden;
-    }
-    .inference { display:grid;grid-template-rows:minmax(0,1fr);height:100%; }
-    .community { display:grid;grid-template-rows:auto minmax(0,1fr);gap:var(--gap);overflow:hidden; }
-
-    .statusHeader,.stageHeader,.brandHeader {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      min-width:0;
-    }
-    .eyebrow,.cardLabel,.metricLabel,.modelMeta,.deviceMeta,.resourceLinks {
-      color:var(--muted);
-      font-size:clamp(12px,0.95vw,16px);
-      font-weight:750;
-      letter-spacing:.11em;
-      text-transform:uppercase;
-    }
-    h1,h2 { margin:2px 0 0;letter-spacing:-.045em;line-height:1.04;font-family:var(--font-display); }
-    h1 { font-size:clamp(26px,2.1vw,36px); }
-    .stageHeader h2 { font-size:clamp(18px,1.55vw,28px); }
-    .status {
-      flex:0 0 auto;
-      padding:6px 9px;
-      border-radius:99px;
-      color:var(--brand);
-      background:#fff0e9;
-      font-size:clamp(12px,.95vw,15px);
-      font-weight:850;
-      letter-spacing:.09em;
-    }
-    .status.offline { color:#777;background:#eeeeeb; }
-    .card {
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:0 4px 14px rgba(23,23,23,.045);
-    }
-
-    .latencyPanel { display:grid;grid-template-rows:auto minmax(0,1fr);padding:clamp(11px,.9vw,16px);overflow:hidden; }
-    .latencyGrid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:clamp(9px,.8vw,15px); }
-    .latencyMetric { min-width:0;padding-top:clamp(8px,.7vw,12px); }
-    .latencyMetric + .latencyMetric { border-left:1px solid var(--line);padding-left:clamp(9px,.8vw,15px); }
-    .latencyMetric strong {
-      display:block;
-      margin-top:4px;
-      color:var(--brand);
-      font-family:var(--font-mono);
-      font-size:clamp(42px,3.8vw,64px);
-      font-weight:780;
-      line-height:1;
-      letter-spacing:-.055em;
-      font-variant-numeric:tabular-nums;
-    }
-    .latencyMetric small { color:var(--muted);font-size:clamp(12px,.95vw,15px);font-weight:750;letter-spacing:.08em; }
-
-    .resourcePanel { display:grid;align-content:space-between;gap:clamp(10px,1.1vh,16px);padding:clamp(12px,1vw,18px);overflow:hidden; }
-    .resourceRow { display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px 12px; }
-    .resourceRow strong { font-family:var(--font-mono);font-size:clamp(19px,1.5vw,26px);font-variant-numeric:tabular-nums; }
-    .resourceBar {
-      grid-column:1 / -1;
-      height:clamp(12px,.95vw,17px);
-      overflow:hidden;
-      border-radius:999px;
-      background:var(--track);
-      box-shadow:inset 0 0 0 1px rgba(0,0,0,.025);
-    }
-    .resourceFill { width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--brand),var(--brand-5));transition:width .35s ease; }
-    .resourceRow[data-resource="cpu"] .resourceFill { background:linear-gradient(90deg,var(--brand-2),var(--brand-4)); }
-    .resourceRow[data-resource="memory"] .resourceFill { background:linear-gradient(90deg,var(--brand-3),var(--brand-6)); }
-
-    .opsGrid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(8px,.65vw,11px); }
-    .opsMetric { display:grid;grid-template-rows:auto auto;align-items:start;gap:6px;padding:clamp(10px,.8vw,14px);min-width:0; }
-    .opsMetric .metricLabel,.opsMetric small { display:block; }
-    .opsMetric strong { color:var(--brand);font-family:var(--font-mono);font-size:clamp(30px,2.6vw,48px);line-height:1;font-variant-numeric:tabular-nums; }
-    .opsMetric small { color:var(--muted);font-size:clamp(10px,.68vw,12px);font-weight:750;letter-spacing:.08em; }
-
-    .trackingCard { padding:clamp(11px,.9vw,16px);overflow:hidden; }
-    .trackingCard dl { display:grid;grid-template-columns:1.1fr 1fr 1fr 1.4fr;gap:5px;margin:clamp(9px,.8vw,14px) 0 0; }
-    .trackingCard dl div { min-width:0; }
-    dt { color:var(--muted);font-size:clamp(12px,0.95vw,15px); }
-    dd { margin:2px 0 0;color:var(--brand);font-family:var(--font-mono);font-size:clamp(22px,1.9vw,32px);font-weight:780;line-height:1;letter-spacing:-.045em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-    .modelMeta { display:flex;align-items:center;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 3px; }
-
-    .stageHeader { display:none; }
-    #runtime { color:var(--muted);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:clamp(12px,.95vw,16px);white-space:nowrap; }
-    .streamShell { min-height:0;position:relative;overflow:hidden;border:1px solid var(--line);border-radius:var(--radius);background:var(--page);box-shadow:0 10px 28px rgba(0,0,0,.05);height:100%; }
-    #stream { position:absolute;inset:0;width:100%;height:100%;object-fit:cover; }
+    .performance { display:flex;flex-direction:column;gap:10px; }
+    .statusHeader,.stageHeader,.brandHeader { display:flex;height:48px;min-height:48px;align-items:center;justify-content:space-between;gap:12px; }
+    .statusHeader,.stageHeader,.brandHeader { animation:headerIn .7s cubic-bezier(.22,1,.36,1) both; }
+    .eyebrow { display:block;font-size:12px;font-weight:600;letter-spacing:.13em;color:var(--muted); }
+    h1,h2 { margin:4px 0 0;line-height:1.08;font-weight:500; }
+    h1 { font-family:var(--font-display);font-size:37px;letter-spacing:-.04em; }
+    h2 { font-size:22px;letter-spacing:-.055em; }
+    .status { color:var(--brand);font:600 12px var(--font-sans);letter-spacing:.09em;white-space:nowrap;background:#fff;padding:9px 10px;border:1px solid #ff3c0026;border-radius:99px;box-shadow:0 3px 12px #ff3c0008; }
+    .status::before { content:"";display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:6px;vertical-align:1px;background:currentColor;animation:breathe 2.8s ease-in-out infinite; }
+    .status.offline { color:var(--muted);border-color:var(--line); }
+    .status.offline::before { animation:none; }
+    .cardLabel { display:block;font-size:14px;font-weight:500;letter-spacing:.025em;color:var(--muted); }
+    .metricLabel { font-size:17px;font-weight:500; }
+    strong,dd { font-family:var(--font-data);font-variant-numeric:tabular-nums; }
+    .latencyPanel { position:relative;padding:18px 20px;color:#fff;border:1px solid #3e444a;border-radius:16px;background:radial-gradient(ellipse at 100% 0%,#505761,transparent 65%),#22262b;box-shadow:0 8px 24px #24324416,inset 0 1px 0 #ffffff20;animation:reveal .7s .08s both; }
+    .latencyPanel::after { content:"";position:absolute;top:18px;right:16px;width:4px;height:4px;border-radius:50%;background:var(--brand);box-shadow:0 0 8px #ff3c0070; }
+    .latencyPanel .cardLabel { color:#d1d6dd;font-size:12px;letter-spacing:.02em;padding-right:10px; }
+    .latencyGrid { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px; }
+    .latencyMetric + .latencyMetric { border-left:1px solid #ffffff24;padding-left:18px; }
+    .latencyMetric .metricLabel { display:block;font-size:16px;color:#dce1e7;font-weight:400; }
+    .latencyMetric strong { display:inline-block;margin-top:7px;font-size:clamp(34px,2.8vw,49px);font-weight:400;line-height:1;letter-spacing:-.08em; }
+    .latencyMetric small { margin-left:6px;font-size:13px;text-transform:lowercase;color:#a5aeb8; }
+    .latencyFps { display:flex;align-items:baseline;gap:5px;margin-top:8px;color:#d1d6dd;font-size:13px;white-space:nowrap; }
+    .latencyFps span { color:#f3f5f7;font:400 18px var(--font-data);font-variant-numeric:tabular-nums; }
+    .resourcePanel { display:grid;gap:10px;padding:14px 18px;border:1px solid #fff;border-radius:16px;background:var(--paper);box-shadow:0 4px 20px #34496106;animation:reveal .7s .16s both; }
+    .resourceRow { display:grid;grid-template-columns:1fr auto;gap:7px;align-items:baseline; }
+    .resourceRow strong { font-size:24px;font-weight:400;letter-spacing:-.06em; }
+    .resourceBar { grid-column:1/-1;height:6px;border-radius:4px;overflow:hidden;background:#e6eaee; }
+    .resourceFill { width:0;height:100%;border-radius:inherit;background:#d87955;transition:width .35s ease; }
+    .opsGrid { display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:14px 20px;background:#ffffff70;border:1px solid #fff;border-radius:14px;animation:reveal .7s .24s both; }
+    .opsMetric { display:flex;flex-direction:column;gap:8px; }
+    .opsMetric + .opsMetric { border-left:1px solid var(--line);padding-left:18px; }
+    .opsMetric .metricLabel { font-size:13px;letter-spacing:.04em; }
+    .opsMetric small { font-size:12px;margin-left:5px;color:var(--muted); }
+    .opsMetric strong { font-size:30px;font-weight:400;line-height:1;letter-spacing:-.06em; }
+    .trackingCard { padding:6px 4px;animation:reveal .7s .32s both; }
+    .trackingCard .cardLabel { font-size:14px; }
+    .trackingCard dl { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:13px 0 0; }
+    .trackingCard dl div:first-child { display:none; }
+    dt { color:var(--muted);font-size:13px; }
+    dd { margin:5px 0 0;font-size:20px;font-weight:400;letter-spacing:-.05em;white-space:nowrap; }
+    .modelInfo { margin-top:auto;padding:12px 4px 0;border-top:1px solid var(--line); }
+    .modelInfo dl { margin:10px 0 0;display:grid;gap:9px; }
+    .modelInfo dl div { display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:baseline; }
+    .modelInfo dt { font-size:13px; }
+    .modelInfo dd { margin:0;font-size:14px;letter-spacing:-.02em;white-space:normal;overflow-wrap:anywhere;line-height:1.4; }
+    .modelInfo small { display:block;margin-top:2px;font:12px var(--font-data);color:var(--muted); }
+    .modelMeta { padding:8px 4px 0;font-size:10px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere; }
+    .inference,.community { display:grid;grid-template-rows:48px minmax(0,1fr);gap:20px; }
+    .stageHeader { gap:8px; }
+    .stageHeader h2 { font-size:clamp(17px,1.45vw,25px); }
+    #runtime { font-family:var(--font-data);color:var(--muted);font-size:13px;white-space:nowrap; }
+    .streamShell { position:relative;min-height:0;overflow:hidden;border-radius:14px;background:#e4e8ec;outline:1px solid #fff;box-shadow:0 12px 36px #2336491a,0 0 0 5px #ffffff45;animation:reveal .8s .12s both; }
+    #stream { position:absolute;inset:0;width:100%;height:100%;object-fit:contain; }
     #stream.stream-error { visibility:hidden; }
-    .streamState { position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:9px 12px;border-radius:10px;color:var(--brand-5);background:rgba(17,17,17,.82);backdrop-filter:blur(6px);font-size:clamp(10px,.8vw,13px);font-weight:850;letter-spacing:.12em; }
-
-    .brandHeader { padding:2px 0;justify-content:center;display:flex; }
-    .brandMark { display:grid;place-items:center;flex:0 0 auto;width:clamp(34px,2.7vw,46px);aspect-ratio:1;color:#fff;background:var(--brand);border-radius:11px;font-size:clamp(17px,1.45vw,24px);font-weight:850; }
-    .brandHeader h2 { font-size:clamp(17px,1.45vw,24px); }
-    .brandLogo { width:auto;max-width:100%;max-height:44px;object-fit:contain;display:block;margin:0 auto; }
-    .brandHeader small { color:var(--muted);font-size:clamp(12px,.95vw,15px); }
-    .qrStack { display:grid;grid-template-rows:repeat(3,minmax(0,1fr));gap:var(--gap);min-height:0; }
-    .qrCard {
-      display:grid;
-      grid-template-rows:minmax(0,1fr) auto;
-      justify-items:center;
-      align-items:center;
-      gap:clamp(5px,.5vw,9px);
-      padding:clamp(7px,.65vw,12px);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      background:var(--card);
-      box-shadow:0 4px 14px rgba(23,23,23,.035);
-      overflow:hidden;
+    .viewLabel { position:absolute;left:12px;top:12px;z-index:1;pointer-events:none;padding:8px 11px;color:#f8fafc;background:rgba(29,35,42,.88);border:1px solid #ffffff33;border-radius:6px;font-size:13px;letter-spacing:.02em; }
+    .viewLabel::before { content:"";display:inline-block;width:4px;height:4px;background:var(--brand);margin-right:8px;vertical-align:2px; }
+    .viewLabel.depthLabel { top:calc(50% + 12px); }
+    .streamState { position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);padding:14px 18px;border-radius:8px;background:#22262b;color:#fff;font-size:13px;text-align:center; }
+    .brandHeader { justify-content:center; }
+    .brandLogo { width:100%;max-width:190px;max-height:34px;object-fit:contain; }
+    .qrStack { display:grid;grid-template-rows:repeat(3,minmax(0,1fr));gap:14px;counter-reset:channel; }
+    .qrCard { position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:0;padding:10px 14px;background:rgba(255,255,255,.85);border:1px solid #fff;border-radius:14px;box-shadow:0 4px 20px #34496106;animation:reveal .7s .2s both; }
+    .qrCard:nth-child(2) { animation-delay:.28s; }
+    .qrCard:nth-child(3) { animation-delay:.36s; }
+    .qrCard::before { counter-increment:channel;content:"0" counter(channel);position:absolute;left:10px;top:9px;font:12px var(--font-data);color:var(--muted); }
+    .qrCard img,.qrMissing { display:block;width:auto;height:calc((100dvh - 320px)/3);max-height:200px;max-width:100%;aspect-ratio:1;object-fit:contain;background:#fff; }
+    .qrMissing { display:grid;place-items:center;color:var(--muted);font-size:13px; }
+    .qrCopy { text-align:center; }
+    .qrCopy strong { font-family:var(--font-sans);font-size:17px;font-weight:600; }
+    .qrCopy small { display:block;margin-top:3px;font-size:13px;color:var(--muted); }
+    @keyframes headerIn { from { opacity:0;transform:translateY(-12px); } to { opacity:1;transform:none; } }
+    @keyframes reveal { from { opacity:0;transform:translateY(12px); } to { opacity:1;transform:none; } }
+    @keyframes breathe { 50% { opacity:.4; } }
+    @media (max-height:850px) and (min-width:1101px) {
+      .modelInfo dl { gap:7px; }
+      .modelInfo small { display:inline;margin-left:6px; }
+      .modelMeta { display:none; }
     }
-    .qrCard img,.qrMissing { width:clamp(112px,9vw,190px);width:var(--qr-size);max-width:100%;max-height:100%;aspect-ratio:1;border:1px solid var(--line);border-radius:10px;background:#fafaf8;object-fit:contain; }
-    .qrMissing { display:grid;place-items:center;padding:8px;color:var(--muted);font-size:clamp(12px,.95vw,15px);font-weight:750;line-height:1.25;text-align:center; }
-    .qrCopy { text-align:center;min-width:0; }
-    .qrCard strong,.qrCard small { display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-    .qrCard strong { font-size:clamp(13px,1vw,17px); }
-    .qrCard small { margin-top:2px;color:var(--muted);font-size:clamp(11px,.85vw,14px); }
-    .deviceMeta { min-height:32px;padding:9px 0 0;border-top:1px solid var(--line);overflow:hidden;white-space:nowrap;text-overflow:ellipsis; }
-    .resourceLinks { display:flex;gap:15px; }
-    .resourceLinks a { color:var(--text);text-decoration:none;border-bottom:1px solid var(--brand);letter-spacing:.05em; }
-    .resourceLinks a:hover { color:var(--brand); }
-
-    @media (max-width:1450px) {
-      :root { --qr-size:clamp(108px,10vw,142px); }
-      .dashboard { grid-template-columns:minmax(270px,22fr) minmax(360px,44fr) minmax(200px,16fr); }
-      .performance { grid-template-rows:auto minmax(90px,.72fr) minmax(146px,1.14fr) minmax(68px,.5fr) minmax(84px,.62fr) auto; }
+    @media (max-height:780px) and (min-width:1101px) {
+      .dashboard { padding:16px 22px;gap:20px;grid-template-columns:minmax(270px,320px) minmax(0,calc((100dvh - 94px)*.884)) minmax(190px,240px); }
+      .performance { gap:10px; }
+      .inference,.community { gap:14px; }
+      .latencyPanel { padding:15px 18px; }
+      .latencyGrid { margin-top:12px; }
+      .latencyMetric strong { font-size:35px; }
+      .resourcePanel { padding:14px 18px;gap:11px; }
+      .resourceRow strong { font-size:22px; }
+      .opsGrid { padding:12px 18px; }
+      .trackingCard dl { margin-top:9px; }
+      .modelInfo { padding-top:8px; }
+      .modelInfo dl { gap:5px;margin-top:7px; }
+      .modelInfo small { display:inline;margin-left:6px; }
+      .modelMeta { display:none; }
+      .qrCard img,.qrMissing { height:calc((100dvh - 272px)/3); }
+    }
+    @media (max-height:650px) and (min-width:1101px) {
+      body { overflow:auto; }
+      .dashboard { min-height:650px; }
+    }
+    @media (max-width:1100px) {
+      body { overflow:auto; }
+      .dashboard { height:auto;min-height:100dvh;grid-template-columns:minmax(250px,1fr) minmax(0,1.65fr);padding:20px;gap:24px; }
+      .inference { min-height:650px; }
+      .community { grid-column:1/-1;grid-template-rows:40px auto; }
+      .qrStack { grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto; }
+      .qrCard { padding:16px; }
+      .qrCard img,.qrMissing { width:150px;height:auto; }
+    }
+    @media (max-width:600px) {
+      .dashboard { grid-template-columns:minmax(0,1fr);padding:16px; }
+      .inference { grid-row:1;min-height:0;height:calc(110vw + 68px); }
+      .qrStack { gap:8px; }
+      .qrCard { padding:16px 4px 10px; }
+      .qrCopy strong { font-size:12px; }
+      .qrCopy small { font-size:10px; }
+      .qrCard::before { display:none; }
+    }
+    @media (prefers-reduced-motion:reduce) {
+      *,*::before,*::after { animation:none !important;transition:none !important; }
     }
   </style>
 </head>
@@ -181,20 +150,20 @@
   <main class="dashboard">
     <aside class="performance" data-region="performance">
       <header class="statusHeader">
-        <div><span class="eyebrow">RDK S100P</span><h1>Performance</h1></div>
-        <span class="status" id="onlineState">LIVE</span>
+        <div><span class="eyebrow">RDK S100P / VISION LAB</span><h1>YOLO26</h1></div>
+        <span class="status offline" id="onlineState" role="status">连接中</span>
       </header>
 
       <section class="card latencyPanel">
         <span class="cardLabel">HBM INFERENCE LATENCY</span>
         <div class="latencyGrid">
-          <div class="latencyMetric"><span class="metricLabel">DETECT HBM</span><strong id="detectHbmMs">—</strong><small>MS</small></div>
-          <div class="latencyMetric"><span class="metricLabel">DEPTH HBM</span><strong id="depthHbmMs">—</strong><small>MS</small></div>
+          <div class="latencyMetric"><span class="metricLabel">Detect</span><strong id="detectHbmMs">—</strong><small>MS</small><div class="latencyFps" title="1000 ÷ HBM 平均延迟；不含前后处理，不代表实际吞吐量"><span id="detectHbmFps">—</span> FPS</div></div>
+          <div class="latencyMetric"><span class="metricLabel">Depth</span><strong id="depthHbmMs">—</strong><small>MS</small><div class="latencyFps" title="1000 ÷ HBM 平均延迟；不含前后处理，不代表实际吞吐量"><span id="depthHbmFps">—</span> FPS</div></div>
         </div>
       </section>
 
       <section class="card resourcePanel">
-        <span class="cardLabel">SYSTEM UTILIZATION</span>
+        <span class="cardLabel">SYSTEM UTILIZATION / 系统负载</span>
         <div class="resourceRow" data-resource="bpu"><span class="metricLabel">BPU</span><strong id="bpuUsage">—</strong><div class="resourceBar" role="progressbar" aria-label="BPU utilization" aria-valuemin="0" aria-valuemax="100"><div class="resourceFill" id="bpuBar"></div></div></div>
         <div class="resourceRow" data-resource="cpu"><span class="metricLabel">CPU</span><strong id="cpuUsage">—</strong><div class="resourceBar" role="progressbar" aria-label="CPU utilization" aria-valuemin="0" aria-valuemax="100"><div class="resourceFill" id="cpuBar"></div></div></div>
         <div class="resourceRow" data-resource="memory"><span class="metricLabel">MEMORY</span><strong id="memoryUsage">—</strong><div class="resourceBar" role="progressbar" aria-label="Memory utilization" aria-valuemin="0" aria-valuemax="100"><div class="resourceFill" id="memoryBar"></div></div></div>
@@ -206,7 +175,7 @@
       </section>
 
       <section class="card trackingCard">
-        <span class="cardLabel">BYTETRACK · PERSON</span>
+        <span class="cardLabel">ByteTrack / 行人追踪</span>
         <dl>
           <div><dt>Active</dt><dd id="trackActive">—</dd></div>
           <div><dt>Total</dt><dd id="trackTotal">—</dd></div>
@@ -215,16 +184,26 @@
         </dl>
       </section>
 
+      <section class="modelInfo" aria-label="Model information">
+        <span class="cardLabel">MODEL STACK / 模型信息</span>
+        <dl>
+          <div><dt>Detect</dt><dd><span id="detectModel">—</span><small id="detectInput">—</small></dd></div>
+          <div><dt>Depth</dt><dd><span id="depthModel">—</span><small id="depthInput">—</small></dd></div>
+          <div><dt>Tracking</dt><dd id="trackingModel">—</dd></div>
+        </dl>
+      </section>
       <section class="modelMeta" id="modelMeta"></section>
     </aside>
 
     <section class="inference" data-region="inference">
       <header class="stageHeader">
-        <div><span class="eyebrow">YOLO26 DUAL PIPELINE</span><h2>Detect · Track · Depth</h2></div>
+        <div><span class="eyebrow">DUAL PIPELINE / 实时感知</span><h2>Detect. Track. Depth.</h2></div>
         <span id="runtime">—</span>
       </header>
       <div class="streamShell">
         <img id="stream" src="/stream" alt="YOLO26 Detect, Track and Depth stream">
+        <span class="viewLabel">01 / Detect + person track</span>
+        <span class="viewLabel depthLabel" id="depthLabel">02 / Depth · 相对深度</span>
         <div class="streamState" id="streamState" hidden>RECONNECTING</div>
       </div>
     </section>
@@ -241,7 +220,7 @@
 
   <script>
     const byId = id => document.getElementById(id);
-    const number = value => Number.isFinite(Number(value)) ? Number(value) : null;
+    const number = value => (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) && Number.isFinite(Number(value)) ? Number(value) : null;
     const format = (value, digits = 1) => {
       const numeric = number(value);
       return numeric === null ? '—' : numeric.toFixed(digits);
@@ -278,11 +257,28 @@
       const bpu = stats.bpu || {};
       const cpu = stats.cpu || {};
       const memory = stats.memory || {};
+      const models = stats.models || {};
+      for (const task of ['detect', 'depth']) {
+        const model = models[task] || {};
+        const file = typeof model.file === 'string' ? model.file.split(/[\\/]/).pop() : '';
+        const match = file.match(/^(yolo26[nmlx])_(detect|depth)(?:_(lite))?_/i);
+        byId(`${task}Model`).textContent = match
+          ? `${match[1].replace(/^yolo/i, 'YOLO')}${match[2] === 'depth' ? ' Depth' : ''}${match[3] ? ' Lite' : ''}`
+          : file || '—';
+        byId(`${task}Input`).textContent = model.input || '—';
+      }
+      byId('trackingModel').textContent = stats.tracking ? 'ByteTrack · Person' : '—';
+      byId('depthLabel').textContent = depth.grid && depth.grid.unit === 'm'
+        ? '02 / Depth · 距离 (m)' : '02 / Depth · 相对深度';
       const detectHbm = detect.bpu_ms && detect.bpu_ms.avg;
       const depthHbm = depth.bpu_ms && depth.bpu_ms.avg;
 
       byId('detectHbmMs').textContent = format(detectHbm);
       byId('depthHbmMs').textContent = format(depthHbm);
+      for (const [task, latency] of [['detect', detectHbm], ['depth', depthHbm]]) {
+        const ms = number(latency);
+        byId(`${task}HbmFps`).textContent = ms !== null && ms > 0 ? format(1000 / ms) : '—';
+      }
       byId('displayFps').textContent = format(stats.display_fps);
       byId('activeTracks').textContent = format(tracking.active, 0);
       byId('trackActive').textContent = format(tracking.active, 0);
@@ -308,9 +304,13 @@
         setOnline(true);
       } catch (error) {
         consecutiveFailures += 1;
-        if (consecutiveFailures >= 3) setOnline(false);
+        if (consecutiveFailures >= 3) {
+          setOnline(false);
+          renderStats({});
+        }
       } finally {
         clearTimeout(timer);
+        setTimeout(pollStats, 600);
       }
     }
 
@@ -338,7 +338,6 @@
     });
 
     pollStats();
-    setInterval(pollStats, 600);
   </script>
 </body>
 </html>

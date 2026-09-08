@@ -1930,30 +1930,19 @@ int main(int argc, char** argv) {
                            ? cv::Mat(frame.rows, frame.cols, CV_8UC3,
                                      cv::Scalar(0, 0, 0))
                            : dpr.color.clone();
-      auto fmt = [](double v) {
-        char b[16];
-        std::snprintf(b, sizeof(b), "%5.1f", v);
-        return std::string(b);
-      };
-      DrawHud(top,
-              "YOLO26x DETECT + PERSON TRACKING 640 NV12 | BPU " +
-                  fmt(dr.bpu_ms) + " ms | " +
-                  std::to_string(dr.object_count) + " objs",
-              "cam " + std::to_string(frame.cols) + "x" +
-                  std::to_string(frame.rows) + " | " +
-                  std::to_string(display_fps.load()).substr(0, 4) + " FPS",
-              kUltra[2]);
+      // The web UI presents pipeline labels and live metrics at native text
+      // resolution; keep the image free of duplicate diagnostic HUD text.
       DrawDepthScale(bottom);
       DrawDepthGrid(bottom, dpr.grid, dpr.grid_cols, dpr.grid_rows,
                     args.depth_meters);
-      DrawHud(bottom, "YOLO26x DEPTH DISTANCE GRID 768 lite | BPU " +
-                          fmt(dpr.bpu_ms) + " ms | Turbo",
-              "near warm / far cold", kUltra[6]);
       // Stack vertically (top: detect, bottom: depth), compress each pane to
       // a landscape-ish aspect ratio, letterboxing to the canvas width so the
       // image is NOT stretched (keeps the source aspect ratio).
       const int pane_h = 420;                // compressed pane height
-      const int canvas_w = frame.cols;       // 1280
+      // Match the camera aspect ratio, not its unscaled pixel width.
+      // Otherwise 420px panes contain hundreds of pixels of encoded sidebars.
+      const int canvas_w = std::max(1, (int)std::lround(
+          (double)pane_h * frame.cols / frame.rows));
       cv::Mat divider(4, canvas_w, CV_8UC3, cv::Scalar(80, 80, 80));
       auto letterbox = [&](const cv::Mat& src, cv::Mat& out) {
         if (src.empty()) { out = cv::Mat(pane_h, canvas_w, CV_8UC3, cv::Scalar(0,0,0)); return; }
