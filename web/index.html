@@ -58,18 +58,19 @@
     .opsMetric .metricLabel { font-size:13px;letter-spacing:.04em; }
     .opsMetric small { font-size:12px;margin-left:5px;color:var(--muted); }
     .opsMetric strong { font-size:30px;font-weight:400;line-height:1;letter-spacing:-.06em; }
-    .trackingCard { padding:6px 4px;animation:reveal .7s .32s both; }
+    .trackingCard { padding:12px 18px;background:var(--paper);border:1px solid #fff;border-radius:14px;box-shadow:0 4px 20px #34496106;animation:reveal .7s .32s both; }
     .trackingCard .cardLabel { font-size:14px; }
-    .trackingCard dl { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:13px 0 0; }
+    .trackingCard dl { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:9px 0 0; }
     .trackingCard dl div:first-child { display:none; }
     dt { color:var(--muted);font-size:13px; }
     dd { margin:5px 0 0;font-size:20px;font-weight:400;letter-spacing:-.05em;white-space:nowrap; }
-    .modelInfo { margin-top:auto;padding:12px 4px 0;border-top:1px solid var(--line); }
-    .modelInfo dl { margin:10px 0 0;display:grid;gap:9px; }
+    .modelInfo { margin-top:0;padding:12px 18px 0;border-top:1px solid var(--line); }
+    .modelInfo dl { margin:12px 0 0;display:grid;gap:12px; }
     .modelInfo dl div { display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:baseline; }
     .modelInfo dt { font-size:13px; }
-    .modelInfo dd { margin:0;font-size:14px;letter-spacing:-.02em;white-space:normal;overflow-wrap:anywhere;line-height:1.4; }
-    .modelInfo small { display:block;margin-top:2px;font:12px var(--font-data);color:var(--muted); }
+    .modelInfo dd { margin:0;font-family:var(--font-sans);font-size:14px;letter-spacing:0;white-space:normal;overflow-wrap:anywhere;line-height:1.4; }
+    .modelInfo small { display:block;margin-top:4px;font:12px/1.4 var(--font-data);color:var(--muted); }
+    .modelInfo dl div:last-child { display:none; } /* Already shown in the ByteTrack panel. */
     .modelMeta { padding:8px 4px 0;font-size:10px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere; }
     .inference,.community { display:grid;grid-template-rows:48px minmax(0,1fr);gap:20px; }
     .stageHeader { gap:8px; }
@@ -98,24 +99,23 @@
     @keyframes reveal { from { opacity:0;transform:translateY(12px); } to { opacity:1;transform:none; } }
     @keyframes breathe { 50% { opacity:.4; } }
     @media (max-height:850px) and (min-width:1101px) {
-      .modelInfo dl { gap:7px; }
-      .modelInfo small { display:inline;margin-left:6px; }
+      .modelInfo dl { gap:10px; }
       .modelMeta { display:none; }
     }
     @media (max-height:780px) and (min-width:1101px) {
       .dashboard { padding:16px 22px;gap:20px;grid-template-columns:minmax(270px,320px) minmax(0,calc((100dvh - 94px)*.884)) minmax(190px,240px); }
-      .performance { gap:10px; }
+      .performance { gap:6px; }
       .inference,.community { gap:14px; }
       .latencyPanel { padding:15px 18px; }
       .latencyGrid { margin-top:12px; }
       .latencyMetric strong { font-size:35px; }
-      .resourcePanel { padding:14px 18px;gap:11px; }
+      .resourcePanel { padding:12px 18px;gap:8px; }
       .resourceRow strong { font-size:22px; }
-      .opsGrid { padding:12px 18px; }
+      .opsGrid { padding:10px 18px; }
+      .trackingCard { padding:10px 18px; }
       .trackingCard dl { margin-top:9px; }
       .modelInfo { padding-top:8px; }
-      .modelInfo dl { gap:5px;margin-top:7px; }
-      .modelInfo small { display:inline;margin-left:6px; }
+      .modelInfo dl { gap:8px;margin-top:9px; }
       .modelMeta { display:none; }
       .qrCard img,.qrMissing { height:calc((100dvh - 272px)/3); }
     }
