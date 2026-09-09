@@ -1,186 +1,177 @@
-# YOLO26 Detect + Depth Dual-Model Realtime Demo (RDK S100P)
+<div align="center">
 
-**[English](README.md)** | **[中文文档](README_cn.md)**
+# YOLO26 Vision Lab
 
-A realtime **dual-model** demo for the **D-Robotics RDK S100P** (Nash) edge board:
-**YOLO26 object detection** and **YOLO26 monocular depth estimation** run
-*concurrently* on the single-core **BPU**, fused into one composite view and
-served over **HTTP/MJPEG** (browser) and/or **HDMI** (DRM/KMS direct-out).
+**Detect. Track. Depth. — on one RDK S100P.**
 
-```
-+----------------------------+     +-----------------------------+
-|  top : camera + detections |     |  left  : metrics panel      |
-|        + person tracks     |     |  center: detect + depth     |
-+----------------------------+     |  right : QR / brand         |
-|  bottom: depth (turbo)     |     +-----------------------------+
-|          + distance grid   |
-+----------------------------+
-```
+A native C++ dual-model vision pipeline with a live browser dashboard.
 
-- **Detect**: YOLO26 (n/m/x) `640x640 NV12`, anchor-free, person tracking via a
-  native C++ **ByteTrack** implementation.
-- **Depth**: YOLO26-Depth (n/l/x) `768x768`, colorized (turbo) with an optional
-  **distance grid** (per-intersection relative distance, or metric with
-  `--depth-meters`).
-- **Inference**: `hobot_dnn` C API (`hbDNN`/`hbUCP`, `libdnn.so` + `libhbucp.so`) —
-  the same native stack TROS uses. Two worker threads submit async UCP tasks so
-  both models are resident on the BPU scheduler at once; CPU pre/post-processing
-  of one model overlaps the other's BPU execution.
-- **Display**: MJPEG + JSON stats over HTTP (`:8080`), and optional **HDMI**
-  direct-out via DRM/KMS (`--hdmi`) with vsync page-flips.
+[English](README.md) · [简体中文](README_cn.md) · [Architecture](docs/architecture.md) · [Web UI](docs/web-ui.md)
 
-## Screenshots
+![C++17](https://img.shields.io/badge/C%2B%2B-17-28313b)
+![Platform](https://img.shields.io/badge/RDK-S100P-ff3c00)
+![License](https://img.shields.io/badge/license-MIT-536170)
 
-**Web dashboard** (browser, `:8080`) — metrics panel + live detect/depth + QR:
+</div>
 
-![web dashboard](docs/images/web_dashboard.png)
+## See the pipeline
 
-**Composite output** — top: camera + detections + person tracks; bottom: depth
-turbo + distance grid:
+YOLO26 detection and monocular depth estimation share the BPU scheduler;
+native C++ ByteTrack associates person detections on the CPU. The browser brings
+the two views and live telemetry together without a frontend build step.
 
-![composite](docs/images/composite_detect_depth.jpg)
+![Silver dashboard: telemetry, live detection/depth and community QR codes](docs/images/web_dashboard_silver.png)
 
-## Benchmarks (S100P, BPU @1.5GHz, 1080p@30, steady-state)
+*Captured on September 9, 2026, with EMEET PIXY at 1920×1080@30. A live snapshot, not a benchmark report.*
 
-| Metric | Value |
-|---|---|
-| camera / detect / depth frames | 1:1, zero drop |
-| end-to-end | ~29.5 fps |
-| detect BPU | avg ~9.2 ms (p95 ~9.4) |
-| depth BPU  | avg ~15.8 ms (p95 ~16.4) |
-| BPU utilization | ~65% |
-| display stream | ~50 fps |
+| Detect | Track | Depth |
+| :--- | :--- | :--- |
+| YOLO26x · 640 × 640 NV12 | ByteTrack · person IDs | YOLO26x Depth Lite · 768 × 768 |
+| Object boxes and class labels | Native C++ association and lifecycle | Turbo visualization and relative-depth grid |
 
-At **1080p@30** the numbers are essentially identical (composite is downscaled and
-model inputs are fixed), so 1080p is free in terms of BPU cost.
+> **Depth is relative by default.** The demo is not a calibrated rangefinder.
+> `--depth-meters K` applies a scalar conversion; it does not by itself establish
+> metric accuracy. ByteTrack is a tracking algorithm, not a third neural model.
 
-## Requirements
+## Dashboard
 
-- **Board**: D-Robotics RDK S100P (aarch64), TROS/Hobot image.
-- **On-board libs**: OpenCV (4.x), `libdnn.so` + `libhbucp.so` (`/usr/hobot/lib`),
-  `libdrm`, Qt5 *not* required (web UI is plain HTML/JS).
-- **Camera**: any V4L2 UVC camera (`/dev/videoN`). An **EMEET PIXY** PTZ camera is
-  supported including firmware-level AI auto-tracking (see
-  [docs/camera-pixy.md](docs/camera-pixy.md)).
-- **Models**: YOLO26 `.hbm` (nash-m). Not in git — see *Get models* below.
+The latest UI uses a silver background, a dot-matrix title, graphite latency
+panel, and muted orange utilization bars.
 
-## Repository layout
+- **Left:** separate Detect/Depth HBM latency and reciprocal FPS; BPU, CPU and
+  memory utilization; display FPS; active persons; a framed ByteTrack panel;
+  model names and input specifications.
+- **Center:** complete detection/tracking view above depth, without encoded
+  sidebars or duplicate diagnostic HUD text.
+- **Right:** branding and three readable QR codes.
+- **Responsive:** desktop-first, 16:9-oriented layout with narrow-screen fallbacks.
+  Reduced-motion preferences are respected.
 
-```
-cpp/
-├── CMakeLists.txt            # builds yolo26_dual + tests + CPack .deb
-├── src/main.cpp              # pipeline + compositor + HTTP + HDMI(KMS)
-├── src/kms_display.h         # DRM/KMS HDMI direct-out (page-flip, vsync)
-├── src/tracking/             # native C++ ByteTrack (byte_tracker.*)
-├── src/ui/browser_overlay.*  # track boxes / labels / depth focus marker
-└── tests/                    # byte_tracker + browser_overlay unit tests
-web/index.html                # browser dashboard (live-reloaded by the server)
-assets/coco_classes.names     # COCO labels
-scripts/
-├── run.sh                    # on-board launcher
-├── deploy.sh                 # push + build on the board
-├── download_models.sh        # fetch .hbm models (not in git)
-├── install_boot.sh           # systemd autostart + HDMI takeover
-└── uninstall_boot.sh         # restore graphical boot
-docs/                         # architecture / web-ui / hdmi / camera / packaging
-```
+Inter and Bubbledot load from external font providers in the **viewing browser**.
+Offline system-font fallbacks are available. Customize the UI in
+[`web/index.html`](web/index.html); the server rereads it on each page request.
 
 ## Quick start
 
-### 1. Get the models
+### 1 · Prepare the board and models
 
-Models are ~200MB and are **not** committed. Host them (GitHub Releases / OSS /
-internal HTTP) and fetch, or copy from an existing board:
+Requires RDK S100P with the Hobot DNN/UCP runtime, OpenCV 4.x, libdrm,
+CMake and a C++17 compiler. Use a V4L2 camera; the demonstrated EMEET PIXY
+may appear as `/dev/video0` or `/dev/video2`; verify the actual device index.
 
-```bash
-MODEL_SRC=/userdata/yolo26_dual_demo/models ./scripts/download_models.sh
-# or
-MODEL_URL=https://github.com/<you>/<repo>/releases/download/v1.0 ./scripts/download_models.sh
-```
-
-### 2. Deploy + build on the board
+Run these commands **on the board**:
 
 ```bash
-BOARD=root@192.168.3.191 ./scripts/deploy.sh
+git clone https://github.com/maxma615/yolo26-detect-depth-demo.git
+cd yolo26-detect-depth-demo
+# Replace with a directory containing compatible Nash-m HBM files.
+MODEL_SRC=/path/to/existing/models bash scripts/download_models.sh
 ```
 
-(or build manually: `cd cpp && cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j$(nproc)`)
+The default pair is **not included in Git**:
 
-### 3. Run
+```text
+models/yolo26x_detect_nashm_640x640_nv12.hbm
+models/yolo26x_depth_lite_nashm_768x768.hbm
+```
+
+You must supply compatible models. Alternatively, set `MODEL_URL` to your own
+model hosting base URL; the repository does not promise a public model download.
+
+### 2 · Build and run
 
 ```bash
-# on the board
-bash scripts/run.sh                          # live camera + web UI on :8080
-bash scripts/run.sh --source 2 --cam-fps 60  # pick camera index / fps
-bash scripts/run.sh --hdmi                   # HDMI direct-out (DRM/KMS)
-bash scripts/run.sh --image assets/bus.jpg   # single-image mode
+cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release
+cmake --build cpp/build -j4
+
+# Default capture is 1080p@30, specified explicitly here for reproducibility.
+# Change --source to the camera's actual video index (0 for this screenshot).
+bash scripts/run.sh --source 0 --cam-w 1920 --cam-h 1080 --cam-fps 30 \
+  --grid-cols 6 --grid-rows 4
 ```
 
-Open `http://<board-ip>:8080/` in a browser.
+Open **http://BOARD_IP:8080/**. Stop the foreground process with **Ctrl+C**.
 
-### CLI options (selected)
-
-| Flag | Default | Meaning |
-|---|---|---|
-| `--source` | `0` | V4L2 camera index (or image/video path) |
-| `--cam-w/--cam-h` | `1920/1080` | capture resolution |
-| `--cam-fps` | `30` | capture frame rate (PIXY supports 60) |
-| `--port` | `8080` | HTTP port |
-| `--hdmi` | off | enable HDMI/DRM direct-out |
-| `--grid-cols/--grid-rows` | `8/6` | depth distance-grid density (`--no-grid` disables) |
-| `--depth-meters K` | `0` | show metric depth (m) instead of relative % |
-| `--score` / `--nms` | `0.25/0.45` | detection thresholds |
-| `--dep-variant` | `x` | depth model size n/l/x |
-
-## Web dashboard
-
-The server reads `web/index.html` from disk **on every request**, so you can edit
-the UI and just refresh the browser — no recompile. The dashboard shows:
-
-- **Left**: HBM inference latency (detect/depth), system utilization
-  (BPU/CPU/MEMORY), display FPS, active persons, ByteTrack stats.
-- **Center**: live composite (detect + tracks on top, depth + distance grid below).
-- **Right**: brand + QR codes.
-
-BPU utilization is read from the hardware counter
-`/sys/devices/system/bpu/ratio` (real occupancy, not an estimate). See
-[docs/web-ui.md](docs/web-ui.md).
-
-## HDMI direct-out
-
-`--hdmi` takes over `/dev/dri/card0` as DRM master and presents the composite with
-double-buffered, vsync-aligned page flips. Use `scripts/install_boot.sh` to make it
-autostart at boot (disables the GNOME desktop so the demo owns the display);
-`scripts/uninstall_boot.sh` restores the desktop. See
-[docs/hdmi.md](docs/hdmi.md).
-
-## Camera: EMEET PIXY + AI tracking
-
-The demo auto-detects any numeric `--source` as a V4L2 camera. For the EMEET PIXY
-PTZ camera you can additionally enable firmware-level AI person tracking over HID.
-See [docs/camera-pixy.md](docs/camera-pixy.md).
-
-## Packaging (.deb)
-
-CPack is configured. On the board:
+<details>
+<summary>Deploy from a Linux / WSL host instead</summary>
 
 ```bash
-cd cpp/build && cpack -G DEB
-# -> yolo26-detect-depth-demo_1.0.0_arm64.deb
-sudo dpkg -i yolo26-detect-depth-demo_1.0.0_arm64.deb
+BOARD=root@BOARD_IP bash scripts/deploy.sh
 ```
 
-See [docs/packaging.md](docs/packaging.md).
+This replaces project files and rebuilds on the board. It does **not** transfer
+the local `models/` directory: place the required HBM files in the destination's
+`models/` directory separately. The default destination is
+`/userdata/yolo26_dual_demo`. Inspect the script before using it on an existing
+installation; it rebuilds the build directory and disables SSH host-key checking.
 
-## Testing
+</details>
+
+## Performance: read the numbers correctly
+
+Representative observations with the default model pair on S100P
+(BPU at 1.5 GHz) are listed below, **not guaranteed benchmarks**.
+Earlier project notes report approximately 29.5 FPS with 1080p@30 input;
+the September 8 UI validation used 720p@30. These are different runs, not a
+controlled resolution comparison.
+
+| Metric | Approximate reference | Meaning |
+| :--- | :--- | :--- |
+| Detect HBM latency | 9.2 ms | Mean BPU task latency |
+| Depth HBM latency | 15.8 ms | Mean BPU task latency |
+| Detection / depth processing | 29–30 FPS at 30 FPS input | Worker processing rate |
+| Display updates | 50 FPS | May reuse inference results; not 50 unique inferred frames/s |
+
+The HBM panel's **FPS = 1000 / mean HBM latency (ms)** excludes preprocessing,
+postprocessing and shared-resource contention. It is not measured end-to-end
+throughput. Display FPS is also separate from capture and model FPS.
+
+The pipeline uses **latest-frame-wins** buffers to prioritize freshness:
+frames can be skipped under load. Similar frame rates do not prove zero drops.
+A zero-drop claim requires frame-ID accounting over a defined test interval.
+This repository does not include a reproducible long-duration benchmark report.
+
+## Camera tracking & HDMI
 
 ```bash
-cd cpp/build && ctest --output-on-failure
+# Optional EMEET PIXY firmware tracking; physically moves the camera.
+python3 -m pip install hidapi
+sudo python3 scripts/pixy_tracking.py on
+sudo python3 scripts/pixy_tracking.py off
+
+# Optional DRM/KMS direct output.
+bash scripts/run.sh --source 0 --hdmi
 ```
 
-Covers the ByteTrack tracker (ID stability, Hungarian tie-breaking, lifecycle) and
-the browser overlay (labels, colors, clamping, focus marker).
+Camera firmware tracking and ByteTrack are independent. HDMI shows the native
+output, **not a browser rendering of the silver dashboard**. Autostart scripts
+can disable the desktop to acquire DRM ownership; read the documentation first.
+
+## Explore
+
+| Guide | Contents |
+| :--- | :--- |
+| [Architecture](docs/architecture.md) | Workers, frame exchange and output |
+| [Web UI](docs/web-ui.md) | Stats endpoints, visual customization and states |
+| [EMEET PIXY](docs/camera-pixy.md) | Camera selection and firmware tracking |
+| [HDMI](docs/hdmi.md) | DRM/KMS output and desktop interaction |
+| [Packaging](docs/packaging.md) | Building a Debian package |
+
+```text
+cpp/       Native inference, ByteTrack, compositor, HTTP, KMS and tests
+web/       Browser UI and branding / QR assets
+scripts/   Launch, deployment, model preparation and camera control
+docs/      Guides and screenshots
+assets/    Class labels and sample assets
+```
+
+Run the native tests after building:
+
+```bash
+ctest --test-dir cpp/build --output-on-failure
+```
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+Repository code is [MIT licensed](LICENSE). Model weights, datasets, fonts and
+other third-party assets retain their respective licenses.
