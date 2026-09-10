@@ -29,8 +29,8 @@ Three-column grid:
   `stats.models`, with missing values shown as a dash.
 - **Center (inference)** — the live composite (detect+tracks top, depth+grid
   bottom), `object-fit:contain` to preserve all detection boxes and depth cells.
-- **Right (community)** — brand logo + three vertically aligned QR codes with
-  compact white surfaces and captions.
+- **Right (community)** — three equal square QR slots, ordered: D-Robotics
+  developer community, Discord, WeChat group. The public-account entry is hidden.
 
 The desktop layout targets 16:9 displays. The center column follows the stacked
 camera aspect ratio and available viewport height. The compositor also sizes its
@@ -73,4 +73,8 @@ real occupancy, not an estimate derived from latency.
 
 - Colors/fonts are CSS custom properties in `:root` (`--brand`, `--ink`, ...).
 - QR images: drop `web/qr1.png..qr3.png`.
+- Discord: `web/discord.png`, linking to https://discord.gg/rzqg8TgUgb.
+  Regenerate with `python scripts/generate_discord_qr.py` (requires `qrcode[pil]`, `svglib`, and `reportlab`).
+  Uses high error correction and the official Discord symbol centered on a Blurple badge.
+  The compact two-module image border relies on the white card for additional scan clearspace.
 - Brand logo: `web/brand.png` (served at `/qr/brand.png`).

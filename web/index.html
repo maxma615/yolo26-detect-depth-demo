@@ -85,7 +85,7 @@
     .streamState { position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);padding:14px 18px;border-radius:8px;background:#22262b;color:#fff;font-size:13px;text-align:center; }
     .brandHeader { justify-content:center; }
     .brandLogo { width:100%;max-width:190px;max-height:34px;object-fit:contain; }
-    .qrStack { display:grid;grid-template-rows:repeat(3,minmax(0,1fr));gap:14px;counter-reset:channel; }
+    .qrStack { display:grid;grid-template-rows:repeat(3,minmax(0,1fr));gap:14px;counter-reset:channel;--qr-edge:clamp(100px,calc((100dvh - 330px)/3),176px); }
     .qrCard { position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:0;padding:10px 14px;background:rgba(255,255,255,.85);border:1px solid #fff;border-radius:14px;box-shadow:0 4px 20px #34496106;animation:reveal .7s .2s both; }
     .qrCard:nth-child(2) { animation-delay:.28s; }
     .qrCard:nth-child(3) { animation-delay:.36s; }
@@ -95,6 +95,15 @@
     .qrCopy { text-align:center; }
     .qrCopy strong { font-family:var(--font-sans);font-size:17px;font-weight:600; }
     .qrCopy small { display:block;margin-top:3px;font-size:13px;color:var(--muted); }
+    .qrCard { flex-direction:column;gap:10px;padding:12px 10px; }
+    .qrCard::before { display:none; }
+    .qrCard:nth-child(4) { animation-delay:.44s; }
+    .qrCard img,.qrMissing { flex:0 0 auto;width:var(--qr-edge);height:var(--qr-edge);max-width:100%;object-fit:contain; }
+    .qrCopy { min-width:0;text-align:center; }
+    .qrCopy strong { font-size:14px; }
+    .qrCopy small { font-size:12px;line-height:1.5; }
+    .qrCopy a { color:inherit;text-decoration:underline;text-decoration-color:#d87955;text-underline-offset:4px; }
+    .qrCopy a:focus-visible { outline:2px solid var(--brand);outline-offset:4px; }
     @keyframes headerIn { from { opacity:0;transform:translateY(-12px); } to { opacity:1;transform:none; } }
     @keyframes reveal { from { opacity:0;transform:translateY(12px); } to { opacity:1;transform:none; } }
     @keyframes breathe { 50% { opacity:.4; } }
@@ -117,7 +126,7 @@
       .modelInfo { padding-top:8px; }
       .modelInfo dl { gap:8px;margin-top:9px; }
       .modelMeta { display:none; }
-      .qrCard img,.qrMissing { height:calc((100dvh - 272px)/3); }
+      .qrCard img,.qrMissing { height:var(--qr-edge); }
     }
     @media (max-height:650px) and (min-width:1101px) {
       body { overflow:auto; }
@@ -128,15 +137,17 @@
       .dashboard { height:auto;min-height:100dvh;grid-template-columns:minmax(250px,1fr) minmax(0,1.65fr);padding:20px;gap:24px; }
       .inference { min-height:650px; }
       .community { grid-column:1/-1;grid-template-rows:40px auto; }
-      .qrStack { grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto; }
+      .qrStack { grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto;--qr-edge:140px; }
       .qrCard { padding:16px; }
-      .qrCard img,.qrMissing { width:150px;height:auto; }
+      .qrCard img,.qrMissing { width:var(--qr-edge);height:var(--qr-edge); }
     }
     @media (max-width:600px) {
       .dashboard { grid-template-columns:minmax(0,1fr);padding:16px; }
       .inference { grid-row:1;min-height:0;height:calc(110vw + 68px); }
-      .qrStack { gap:8px; }
+      .qrStack { gap:8px;--qr-edge:clamp(72px,22vw,120px); }
       .qrCard { padding:16px 4px 10px; }
+      .qrCard { flex-direction:column; }
+      .qrCopy { text-align:center; }
       .qrCopy strong { font-size:12px; }
       .qrCopy small { font-size:10px; }
       .qrCard::before { display:none; }
@@ -211,9 +222,9 @@
     <aside class="community" data-region="community">
       <header class="brandHeader"><img class="brandLogo" src="/qr/brand.png" alt="RDK S100P"></header>
       <section class="qrStack">
+        <article class="qrCard" data-qr-card><img src="/qr/qr2.png" alt="加入地瓜开发者社区"><div class="qrCopy"><strong>加入地瓜开发者社区</strong><small>提问与分享</small></div></article>
+        <article class="qrCard" data-qr-card><img src="/qr/discord.png" alt="Discord 群组邀请二维码"><div class="qrCopy"><strong><a href="https://discord.gg/rzqg8TgUgb" target="_blank" rel="noopener noreferrer">Discord</a></strong><small>加入开发者群组</small></div></article>
         <article class="qrCard" data-qr-card><img src="/qr/qr1.png" alt="微信交流群"><div class="qrCopy"><strong>微信交流群</strong><small>开发交流</small></div></article>
-        <article class="qrCard" data-qr-card><img src="/qr/qr2.png" alt="社区论坛"><div class="qrCopy"><strong>社区论坛</strong><small>提问与分享</small></div></article>
-        <article class="qrCard" data-qr-card><img src="/qr/qr3.png" alt="微信公众号"><div class="qrCopy"><strong>微信公众号</strong><small>资讯与教程</small></div></article>
       </section>
     </aside>
   </main>
